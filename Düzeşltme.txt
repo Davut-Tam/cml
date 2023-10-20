@@ -1,0 +1,49 @@
+öğrenciye Veli1Id ve Veli2I eklendi
+öğrenci anaadi,babaadi silindi
+veliden Tel 2 Silindi Tel1 Telefon olarak güncellenecek
+
+personel Tel2 silindi, Tel1 Telefon olarak güncellendi
+
+firma Tel2 silindi, Tel1 Telefon olarak güncellendi
+
+ÖğrenciView güncellendi
+SELECT        o.Id, o.TcKimlikNo, o.AdiSoyadi, o.Veli1Id, o.Veli2Id, o.EmailAdresi, o.GeldigiOkul, o.Adres, o.DonemId, o.GrupId, o.SinifId, o.KayitTarihi, o.Aciklama, o.Durum, o.Resim, o.KayitTutari, o.TahakkukNo, o.TahakkukTutari, 
+                         o.KullaniciId, o.IslemTarihi, o.OtoSms, v1.VeliAdiSoyadi AS Veli1AdiSoyadi, v1.Telefon AS Veli1Telefon, v2.VeliAdiSoyadi AS Veli2AdiSoyadi, v2.Telefon AS Veli2Telefon, d.DonemAdi, g.GrupAdi, s.SinifAdi,gr.GorevAdi as Veli1MeslekAdi,gr2.GorevAdi as Veli2MeslekAdi,
+						 COALESCE (ot2.Toplam,0) AS TahsilatTutari, COALESCE (ot2.Iade, 0) AS GeriIadeTutari, COALESCE (o.TahakkukTutari, 0) + COALESCE (ot2.Iade, 0) - COALESCE (ot2.Toplam, 0) AS KalanBakiye
+FROM            dbo.Ogrenci AS o LEFT OUTER JOIN
+                         dbo.Veli AS v1 ON o.Veli1Id = v1.Id LEFT OUTER JOIN
+                         dbo.Veli AS v2 ON o.Veli2Id = v2.Id LEFT OUTER JOIN
+                         dbo.Donem AS d ON o.DonemId = d.Id LEFT OUTER JOIN
+                         dbo.Grup AS g ON o.GrupId = g.Id LEFT OUTER JOIN
+                         dbo.Sinif AS s ON o.SinifId = s.Id LEFT OUTER JOIN
+						 dbo.Gorev AS gr ON v1.GorevId = gr.Id LEFT OUTER JOIN
+						 dbo.Gorev AS gr2 ON v2.GorevId = gr2.Id LEFT OUTER JOIN
+                         dbo.viewOgrTahsList2 AS ot2 ON ot2.OgrenciId = o.Id
+
+personelView güncellenecek
+SELECT        p.Id, p.TcKimlikNo, p.AdiSoyadi, p.GorevId, p.BaslamaTarihi, p.Maas, p.MaasOdemeGunu, p.Resim, p.EmailAdresi, p.Telefon, p.Adres, p.BankaAdi, p.IbanNo, p.Aciklama, p.IslemTarihi, p.KullaniciId, p.Durum, p.OtomatikMaas, 
+                         CASE p.OtomatikMaas WHEN 1 THEN 'Otomatik' ELSE 'Manuel' END AS TahakkukSekli, g.GorevAdi,
+                             (SELECT        COALESCE (SUM(Maas), 0) AS Expr1
+                               FROM            dbo.PersonelOdemePlani
+                               WHERE        (p.Id = PersonelId)) AS HakedilenMaas,
+                             (SELECT        COALESCE (SUM(Tutar), 0) AS Expr1
+                               FROM            dbo.viewPersTumOdemeListesi
+                               WHERE        (PersonelId = p.Id)) AS OdenenMaas,
+                             (SELECT        COALESCE (SUM(Tutar), 0) AS Expr1
+                               FROM            dbo.viewPersTumIadeListesi
+                               WHERE        (PersonelId = p.Id)) AS ToplamIade,
+                             (SELECT        COALESCE (SUM(Maas), 0) AS Expr1
+                               FROM            dbo.PersonelOdemePlani AS PersonelOdemePlani_2
+                               WHERE        (p.Id = PersonelId)) +
+                             (SELECT        COALESCE (SUM(Tutar), 0) AS Expr1
+                               FROM            dbo.viewPersTumIadeListesi AS viewPersTumIadeListesi_1
+                               WHERE        (PersonelId = p.Id)) -
+                             (SELECT        COALESCE (SUM(Tutar), 0) AS Expr1
+                               FROM            dbo.viewPersTumOdemeListesi AS viewPersTumOdemeListesi_1
+                               WHERE        (PersonelId = p.Id)) AS KalanBakiye,
+                             (SELECT        MAX(SonOdemeTarihi) AS Expr1
+                               FROM            dbo.PersonelOdemePlani AS PersonelOdemePlani_1
+                               WHERE        (PersonelId = p.Id)) AS SonMaasTahakkukTarihi
+FROM            dbo.Personel AS p LEFT OUTER JOIN
+                         dbo.Gorev AS g ON p.GorevId = g.Id
+

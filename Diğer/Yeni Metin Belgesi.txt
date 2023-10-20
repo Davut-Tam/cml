@@ -1,0 +1,17 @@
+giden tek sms
+
+{
+"sonuc":true,
+"mesaj":"gönderim tamamlandı",
+"status":"ok",
+"error":"",
+"gonderilenAdet":1,
+"hataliAdet":0,
+"hataliGsm":"",
+"hataliTckNo":"",
+"result":
+       {"messageid":["105334-RHW-EE1CGBZ-ULF-HGL2KH5"],
+        "count":1,
+        "kredi":52495
+       }
+}
